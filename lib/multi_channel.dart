@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_plugin_test/native_view_example.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import 'config.dart' as config;
+import 'config_rtc.dart' as config;
 
 const _channelId0 = 'channel0';
 const _channelId1 = 'channel1';
