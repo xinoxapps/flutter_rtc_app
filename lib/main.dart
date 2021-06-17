@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'config.dart' as config;
+import 'config_rtc.dart' as config;
 import 'multi_channel.dart';
 
 void main() {
