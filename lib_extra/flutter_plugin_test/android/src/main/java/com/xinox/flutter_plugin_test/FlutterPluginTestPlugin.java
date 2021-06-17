@@ -1,8 +1,8 @@
 package com.xinox.flutter_plugin_test;
 
 import androidx.annotation.NonNull;
+
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
-import io.flutter.plugin.common.BinaryMessenger;
 
 public class FlutterPluginTestPlugin implements FlutterPlugin {
   @Override
