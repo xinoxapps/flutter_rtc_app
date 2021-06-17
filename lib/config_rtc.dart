@@ -1,11 +1,10 @@
 import 'package:agora_rtc_engine/rtc_engine.dart';
 
 /// Get your own App ID at https://dashboard.agora.io/
-const appId = "d900f43c0d8b4da09624b5e8964c8c02";
+const appId = "";
 
 /// Please refer to https://docs.agora.io/en/Agora%20Platform/token
-const token =
-    "006d900f43c0d8b4da09624b5e8964c8c02IACHBLxL8+tDrTX7s1I7rP2aHa/6Wc2/AEgWK+F1wdOP4ro1nj4AAAAAEADEZWnpAe+1YAEAAQAB77Vg";
+const token = "";
 
 /// Your channel ID
 const channelId = "wendel";
