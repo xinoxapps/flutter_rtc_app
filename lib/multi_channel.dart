@@ -208,9 +208,9 @@ class _State extends State<MultiChannel> {
               ],
             ),
             // Simple plugin showing a native canvas with text.
-            _renderPlugIn(),
+            _renderTextPlugIn(),
             // Video plugin, works fine in combination with the above plugin.
-            _renderPlayer(),
+            _renderVideoPlayer(),
             // Enable TextureView or SurfaceView, in both cases the freeze occurs, or unstable framerate when _renderPlayer is included.
             _renderRtc(useTextureView: false),
           ],
@@ -251,11 +251,11 @@ class _State extends State<MultiChannel> {
     );
   }
 
-  _renderPlugIn() {
+  _renderTextPlugIn() {
     return SizedBox(height: 100, child: NativeExampleView());
   }
 
-  _renderPlayer() {
+  _renderVideoPlayer() {
     return SizedBox(height: 200, child: VideoPlayer(_controller));
   }
 
