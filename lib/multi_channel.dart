@@ -8,6 +8,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_plugin_test/native_view_example.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:video_player/video_player.dart';
 
 import 'config_rtc.dart' as config;
 
@@ -24,6 +25,8 @@ class MultiChannel extends StatefulWidget {
 }
 
 class _State extends State<MultiChannel> {
+  late VideoPlayerController _controller;
+
   String? renderChannelId;
   bool isJoined0 = false, isJoined1 = false;
   List<int> remoteUid0 = [], remoteUid1 = [];
@@ -32,11 +35,20 @@ class _State extends State<MultiChannel> {
   void initState() {
     super.initState();
     this._initEngine();
+
+    _controller = VideoPlayerController.asset('assets/example.mp4');
+    _controller.addListener(() {
+      setState(() {});
+    });
+    _controller.setLooping(true);
+    _controller.initialize().then((_) => setState(() {}));
+    _controller.play();
   }
 
   @override
   void dispose() {
     super.dispose();
+    _controller.dispose();
     widget._engine?.destroy();
   }
 
@@ -195,8 +207,12 @@ class _State extends State<MultiChannel> {
                 )
               ],
             ),
-            _renderVideo2(),
-            _renderVideo(),
+            // Simple plugin showing a native canvas with text.
+            _renderPlugIn(),
+            // Video plugin, works fine in combination with the above plugin.
+            _renderPlayer(),
+            // Enable TextureView or SurfaceView, in both cases the freeze occurs, or unstable framerate when _renderPlayer is included.
+            _renderRtc(useTextureView: false),
           ],
         ),
         Align(
@@ -235,11 +251,15 @@ class _State extends State<MultiChannel> {
     );
   }
 
-  _renderVideo2() {
-    return SizedBox(height: 300, child: NativeExampleView());
+  _renderPlugIn() {
+    return SizedBox(height: 100, child: NativeExampleView());
   }
 
-  _renderVideo() {
+  _renderPlayer() {
+    return SizedBox(height: 200, child: VideoPlayer(_controller));
+  }
+
+  _renderRtc({bool useTextureView = false}) {
     List<int>? remoteUid;
     if (renderChannelId == _channelId0) {
       remoteUid = remoteUid0;
@@ -249,9 +269,18 @@ class _State extends State<MultiChannel> {
     return Expanded(
       child: Stack(
         children: [
-          RtcLocalView.SurfaceView(
-            channelId: renderChannelId,
-          ),
+          if (useTextureView)
+            RtcLocalView.TextureView(
+              channelId: renderChannelId,
+              renderMode: VideoRenderMode.FILL,
+              mirrorMode: VideoMirrorMode.Enabled,
+            ),
+          if (!useTextureView)
+            RtcLocalView.SurfaceView(
+              channelId: renderChannelId,
+              renderMode: VideoRenderMode.FILL,
+              mirrorMode: VideoMirrorMode.Enabled,
+            ),
           if (remoteUid != null)
             Align(
               alignment: Alignment.topLeft,
@@ -262,7 +291,8 @@ class _State extends State<MultiChannel> {
                     (e) => Container(
                       width: 120,
                       height: 120,
-                      child: RtcRemoteView.SurfaceView(
+                      child: RtcRemoteView.TextureView(
+                        renderMode: VideoRenderMode.FILL,
                         uid: e,
                         channelId: renderChannelId,
                       ),
