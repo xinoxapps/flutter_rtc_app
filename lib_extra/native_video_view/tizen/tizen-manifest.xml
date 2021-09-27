@@ -9,5 +9,8 @@
     <tv-info api-version="8.8.0">
         <infolink>T-INFOLINK2021-1000</infolink>
     </tv-info>
+    <privileges>
+        <privilege>http://tizen.org/privilege/internet</privilege>
+    </privileges>
     <feature name="http://tizen.org/feature/screen.size.all"/>
 </manifest>

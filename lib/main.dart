@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'multi_channel.dart';
 
 void main() {
-  // add api id to config.
   runApp(MaterialApp(home: MyApp()));
 }
 
