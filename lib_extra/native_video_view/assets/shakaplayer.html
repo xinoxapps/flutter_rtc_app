@@ -1,0 +1,468 @@
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="mobile-web-app-capable" content="yes">
+    <style>
+        .videoBg {
+            background-color: #000;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+    </style>
+    <script defer src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js"></script>
+    <!-- Your application source: -->
+    <!-- transmuxing support is enabled by including this: -->
+    <script src="https://github.com/videojs/mux.js/releases/latest/download/mux.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/3.1.0/shaka-player.compiled.js"></script>
+
+    <script type="text/javascript">
+        let videoCurrentTime = 0;
+
+        function externalCurrentTime() {
+            let currentTime = window.video.currentTime;
+            return currentTime;
+        }
+
+        async function externalCommand(obj) {
+            try {
+                let resp = await _externalCommand(obj);
+                return JSON.stringify(resp);
+            } catch (err) {
+                console.error("Error externalCommand", JSON.stringify(err));
+                onErrorEvent(err);
+            }
+        }
+
+        async function _externalCommand(obj) {
+            if (obj && obj.command) {
+                sendExternalMessage({
+                    'event': {
+                        'type': 'command',
+                        'command': obj.command,
+                        'params': obj.params
+                    }
+                });
+                if (obj.command === 'play') {
+                    await window.video.play();
+                } else if (obj.command === 'pause') {
+                    await window.video.pause();
+                } else if (obj.command === 'volume') {
+                    let volume = obj.params.volume || window.video.volume;
+                    window.video.volume = Math.max(0.0, Math.min(1.0, volume));
+                } else if (obj.command === 'muted') {
+                    let muted = obj.params.muted || window.video.muted;
+                    window.video.muted = muted;
+                } else if (obj.command === 'seekTo') {
+                    let currentTime = obj.params.currentTime || window.video.currentTime;
+                    window.video.currentTime = Math.min(0, currentTime);
+                } else if (obj.command === 'load') {
+                    if (obj.params.widevineLicenseUrl) {
+                        shaka.Player.probeSupport().then(function(support) {
+            console.log(JSON.stringify(support, null, '  '));
+          });
+                        console.log("drm support", JSON.stringify(drmResults));
+
+                        let licenseUrl = obj.params.widevineLicenseUrl;
+                        console.log("widevineLicenseUrl:" + licenseUrl);
+                        player.getNetworkingEngine().clearAllRequestFilters();
+                        player.getNetworkingEngine().registerRequestFilter((type, request) => {
+                            console.log(request.uris[0]);
+                            if (type !== shaka.net.NetworkingEngine.RequestType.LICENSE) {
+                                return;
+                            }
+                            const decoded = new TextDecoder('utf-8').decode(request.body).substring(4);
+                            request.allowCrossSiteCredentials = false;
+                            request.headers['Content-Type'] = 'application/octet-stream';
+                            request.body = shaka.util.Uint8ArrayUtils.fromBase64(decoded);
+                            console.log("registerRequestFilter " + decoded);
+
+                        });
+                        player.configure({
+                            drm: {
+                                servers: {
+                                    'com.widevine.alpha': licenseUrl,
+                                },
+                                advanced: {
+                                    'com.widevine.alpha': {
+                                        // distinctiveIdentifierRequired: true,
+                                        persistentStateRequired: false,
+                                        videoRobustness: 'HW_SECURE_ALL',
+                                        // audioRobustness: 'HW_SECURE_ALL'
+                                    }
+                                },
+                                retryParameters: {
+                                    timeout: 0, // timeout in ms, after which we abort; 0 means never
+                                    maxAttempts: 4, // the maximum number of requests before we fail
+                                    baseDelay: 1500, // the base delay in ms between retries
+                                    backoffFactor: 2, // the multiplicative backoff factor between retries
+                                    fuzzFactor: 0.5, // the fuzz factor to apply to each retry delay
+                                }
+                            },
+                            manifest: {
+                                dash: {
+                                    ignoreMinBufferTime: true,
+                                },
+                                retryParameters: {
+                                    timeout: 0, // timeout in ms, after which we abort; 0 means never
+                                    maxAttempts: 6, // the maximum number of requests before we fail
+                                    baseDelay: 2000, // the base delay in ms between retries
+                                    backoffFactor: 2, // the multiplicative backoff factor between retries
+                                    fuzzFactor: 0.5, // the fuzz factor to apply to each retry delay
+                                },
+                            },
+                            streaming: {
+                                rebufferingGoal: 2,
+                                bufferingGoal: 90,
+                                bufferBehind: 90,
+                                retryParameters: {
+                                    timeout: 0, // timeout in ms, after which we abort; 0 means never
+                                    maxAttempts: 2, // the maximum number of requests before we fail
+                                    baseDelay: 2000, // the base delay in ms between retries
+                                    backoffFactor: 2, // the multiplicative backoff factor between retries
+                                    fuzzFactor: 0.5, // the fuzz factor to apply to each retry delay
+                                },
+                                jumpLargeGaps: true,
+                                smallGapLimit: 0.6,
+                            },
+                            abr: {
+                                enabled: true,
+                                defaultBandwidthEstimate: 500000,
+                                switchInterval: 10,
+                            }
+                        });
+                        obj.params.mimeType = null;
+                    }
+                    // https://shaka-player-demo.appspot.com/docs/api/lib_player.js.html#line1145
+                    const testManifestUrl =
+                        'https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd';
+
+                    const mimeTypes = {
+                        'mp4': 'video/mp4',
+                        'm4v': 'video/mp4',
+                        'm4a': 'audio/mp4',
+                        'webm': 'video/webm',
+                        'weba': 'audio/webm',
+                        'mkv': 'video/webm', // Chromium browsers supports it.
+                        'ts': 'video/mp2t',
+                        'ogv': 'video/ogg',
+                        'ogg': 'audio/ogg',
+                        'mpg': 'video/mpeg',
+                        'mpeg': 'video/mpeg',
+                        'm3u8': 'application/x-mpegurl',
+                        'mp3': 'audio/mpeg',
+                        'aac': 'audio/aac',
+                        'flac': 'audio/flac',
+                        'wav': 'audio/wav',
+                    };
+
+                    let manifestUrl = obj.params.manifestUrl || testManifestUrl;
+                    let mimeType = obj.params.mimeType || null;
+
+                    console.log("call load with manifestUrl:" + manifestUrl);
+                    await window.player.load(manifestUrl, null, mimeType);
+                    //window.video.play();
+                    console.log("loaded called");
+                }
+            }
+            return {'success': 'OK'};
+        }
+
+        function sendExternalMessage(obj) {
+            try {
+                messageHandler.postMessage(JSON.stringify(obj));
+            } catch (err) {
+                console.error('sendExternalMessage', err);
+            }
+        }
+
+        function initApp() {
+            try {
+                // Install built-in polyfills to patch browser incompatibilities.
+                shaka.polyfill.installAll();
+
+                // Check to see if the browser supports the basic APIs Shaka needs.
+                if (shaka.Player.isBrowserSupported()) {
+                    // Everything looks good!
+                    initPlayer();
+                } else {
+                    // This browser does not have the minimum set of APIs we need.
+                    sendExternalMessage({error: {code: 'not-supported'}});
+                }
+            } catch (err) {
+                console.error('initApp error', err);
+            }
+        }
+
+        async function initPlayer() {
+            console.log("initPlayer()");
+
+            // Create a Player instance.
+            const video = document.getElementById('video');
+            const player = new shaka.Player(video);
+            const eventManager = new shaka.util.EventManager();
+
+            // Listen for error events.
+            player.addEventListener('error', onErrorEvent);
+
+            // Attach player to the window to make it easy to access in the JS console.
+            window.player = player;
+            window.video = video;
+
+            player.configure({
+                manifest: {
+                    dash: {
+                        ignoreMinBufferTime: true
+                    }
+                },
+                streaming: {
+                    bufferingGoal: 10,
+                    rebufferingGoal: 2
+                }
+            });
+
+            /**
+             * documentation: video element
+             * https://www.w3schools.com/tags/ref_av_dom.asp
+             */
+            video.addEventListener('timeupdate', function (_) {
+                let currentTime = Math.round(video.currentTime || 0.0);
+                let duration = video.duration || 0;
+                if (currentTime !== videoCurrentTime) {
+                    videoCurrentTime = currentTime;
+                    let obj = {
+                        'event': {
+                            'type': 'timeupdate',
+                            'currentTime': currentTime,
+                            'paused': false,
+                            'duration': duration
+                        }
+                    };
+                    sendExternalMessage(obj);
+                }
+            });
+            video.addEventListener('loadeddata', function (_) {
+                let duration = video.duration || 0;
+                let width = video.videoWidth || 0;
+                let height = video.videoHeight || 0;
+
+                let obj = {
+                    'event': {
+                        'type': 'loaded',
+                        'duration': duration,
+                        'width': width,
+                        'height': height,
+                    }
+                };
+                sendExternalMessage(obj);
+            });
+            video.addEventListener('play', function (_) {
+                let currentTime = video.currentTime || 0;
+                let paused = video.paused || true;
+                let obj = {
+                    'event': {
+                        'type': 'play',
+                        'currentTime': currentTime,
+                        'paused': paused
+                    }
+                };
+                sendExternalMessage(obj);
+            });
+            video.addEventListener('pause', function (_) {
+                let currentTime = video.currentTime || 0;
+                let paused = video.paused || true;
+                let obj = {
+                    'event': {
+                        'type': 'pause',
+                        'currentTime': currentTime,
+                        'paused': paused
+                    }
+                };
+                sendExternalMessage(obj);
+            });
+            video.addEventListener('ended', function (_) {
+                let currentTime = video.currentTime || 0;
+                let paused = video.paused || true;
+                let obj = {
+                    'event': {
+                        'type': 'ended',
+                        'currentTime': currentTime,
+                        'paused': paused
+                    }
+                };
+                sendExternalMessage(obj);
+            });
+            video.addEventListener('seeking', function (_) {
+                let currentTime = video.currentTime || 0;
+                let paused = video.paused || true;
+                let obj = {
+                    'event': {
+                        'type': 'seeking',
+                        'currentTime': currentTime,
+                        'paused': paused
+                    }
+                };
+                sendExternalMessage(obj);
+            });
+            video.addEventListener('seeked', function (_) {
+                let currentTime = video.currentTime || 0;
+                let paused = video.paused || true;
+                let obj = {
+                    'event': {
+                        'type': 'seeked',
+                        'currentTime': currentTime,
+                        'paused': paused
+                    }
+                };
+                sendExternalMessage(obj);
+            });
+            video.addEventListener('canplay', function (_) {
+                console.log("event canplay");
+            });
+            video.addEventListener('stalled', function (_) {
+                console.log("event stalled");
+            });
+            video.addEventListener('waiting', function (_) {
+                console.log("event waiting");
+            });
+
+            sendExternalMessage({
+                'event': {
+                    'type': 'created'
+                }
+            });
+        }
+
+        function onErrorEvent(event) {
+            console.log("video-error");
+            try {
+                // Extract the shaka.util.Error object from the event.
+                if (event.detail && event.detail.code) {
+                    sendExternalMessage({error: {code: 'video-error', detail: "" + event.detail.code}});
+                } else if (event.code) {
+                    sendExternalMessage({error: {code: 'video-error', detail: event}});
+                } else {
+                    sendExternalMessage({error: {code: 'video-error', detail: "0"}});
+                }
+            } catch (ex) {
+                console.log("error in sendExternalMessage");
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initApp);
+
+
+        const DRM_NONE = 'default';
+
+        const drmTypes = {
+            default: {videoType: 'DASH_WV', profile: 'G'},
+            widevine: {videoType: 'DASH_WV', profile: 'G'},
+            playready: {videoType: 'DASH_PR', profile: 'M'},
+            fairplay: {videoType: 'DASH_PR', profile: 'A'},
+        };
+
+        async function getDrm() {
+            // If it is apple then it is fairplay
+            try {
+                new window.WebKitMediaKeys('com.apple.fps');
+                return {type: 'fairplay', ...drmTypes['fairplay']};
+            } catch (e) {
+                // do nothing
+            }
+
+            const basicVideoCapabilities = [
+                {contentType: 'video/mp4; codecs="avc1.42E01E"'},
+                {contentType: 'video/webm; codecs="vp8"'},
+            ];
+
+            const basicConfig = {
+                videoCapabilities: basicVideoCapabilities,
+            };
+
+            const offlineConfig = {
+                videoCapabilities: basicVideoCapabilities,
+                persistentState: 'required',
+                sessionTypes: ['persistent-license'],
+            };
+
+            // Try the offline config first, then fall back to the basic config.
+            const configs = [offlineConfig, basicConfig];
+
+            let result;
+            /*
+            // Check for playready
+            try {
+              await navigator.requestMediaKeySystemAccess('com.microsoft.playready', configs).then(() => {
+                result = 'playready';
+              });
+            } catch (e) {
+              // do nothing
+            }
+
+            if (result) {
+              return { type: result, ...drmTypes[result] };
+            }
+            */
+
+            // Check for working Widevine L1 backend
+            try {
+
+                const videoCapabilities = [{
+                    contentType: 'video/mp4; codecs="avc1.42E01E"',
+                    robustness: 'HW_SECURE_ALL'
+                }];
+                const audioCapabilities = [
+                    {
+                        robustness: 'SW_SECURE_CRYPTO',
+                        contentType: 'audio/mp4;codecs="mp4a.40.2"',
+                    },
+                ];
+
+                const mediaKeySystemAccess = await navigator.requestMediaKeySystemAccess('com.widevine.alpha', [
+                    {
+                        initDataTypes: ['cenc'],
+                        persistentState: 'optional',
+                        distinctiveIdentifier: 'optional',
+                        sessionTypes: ['temporary'],
+                        videoCapabilities,
+                        audioCapabilities,
+                    },
+                ]);
+
+                // try creating the CDM (this fails on some phones, where there is phony L1)
+                await mediaKeySystemAccess.createMediaKeys();
+                result = 'widevine';
+            } catch (e) {
+                console.log("requestMediaKeySystemAccess", e);// do nothing
+            }
+
+            if (result) {
+                return {type: result, HW_SECURE_ALL: true, ...drmTypes[result]};
+            }
+            // Check for regular Widevine L3 backend (don't care if it's working)
+            try {
+                await navigator.requestMediaKeySystemAccess('com.widevine.alpha', configs);
+                result = 'widevine';
+            } catch (e) {
+                console.log("requestMediaKeySystemAccess 'com.widevine.alpha'", e);//
+                // do nothing
+            }
+
+            if (result) {
+                return {type: result, ...drmTypes[result]};
+            }
+
+            return {type: DRM_NONE, ...drmTypes[DRM_NONE]};
+        };
+    </script>
+</head>
+<body>
+<video id="video" class="videoBg"
+       poster="https://shaka-player-demo.appspot.com/assets/poster.jpg"
+       playsinline></video>
+</body>
+</html>

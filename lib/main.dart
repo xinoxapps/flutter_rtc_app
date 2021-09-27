@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'config_rtc.dart' as config;
 import 'multi_channel.dart';
 
 void main() {
   // add api id to config.
-  assert(config.appId.isNotEmpty);
   runApp(MaterialApp(home: MyApp()));
 }
 
