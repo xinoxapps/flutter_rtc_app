@@ -14,7 +14,7 @@ dependencies:
   equatable: ^2.0.3
   pointer_interceptor: ^0.9.0+1
   webview_flutter: ^2.0.4
-  #webview_flutter_tizen: ^0.3.5
+  webview_flutter_tizen: ^0.3.5
 
 dev_dependencies:
   flutter_test:
