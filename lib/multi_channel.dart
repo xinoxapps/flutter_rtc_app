@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:native_video_view/native_video_view.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 import 'kpn.dart';
 
@@ -12,6 +13,7 @@ class MultiChannel extends StatefulWidget {
 
 class _State extends State<MultiChannel> {
   String stateText = "Loading..";
+  bool showDefaultWebView = false;
   @override
   void initState() {
     super.initState();
@@ -35,7 +37,9 @@ class _State extends State<MultiChannel> {
               builder: (BuildContext context,
                   AsyncSnapshot<StreamManifest> manifest) {
                 if (manifest.hasData) {
-                  return _renderVideoPlayer(context, manifest.data!);
+                  return showDefaultWebView
+                      ? _renderWeb()
+                      : _renderVideoPlayer(context, manifest.data!);
                 } else if (manifest.hasError) {
                   return Container(
                     child:
@@ -50,9 +54,19 @@ class _State extends State<MultiChannel> {
     ]);
   }
 
+  Widget _renderWeb() {
+    return Container(
+        color: Colors.red,
+        alignment: Alignment.center,
+        child: WebView(
+          initialUrl: 'https://shaka-player-demo.appspot.com/demo/',
+        ));
+  }
+
   Widget _renderVideoPlayer(
       BuildContext context, StreamManifest streamManifest) {
     return Container(
+      color: Colors.green,
       alignment: Alignment.center,
       child: NativeVideoView(
         keepAspectRatio: true,
@@ -63,6 +77,11 @@ class _State extends State<MultiChannel> {
           setState(() {
             stateText = "created";
           });
+          /*
+          controller.setVideoSource(
+              'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+              mimeType: 'video/mp4');
+          */
           controller.setVideoSource(streamManifest.metadata.srcURL.toString(),
               drmCertificateUrl:
                   streamManifest.metadata.certificateURL?.toString(),
@@ -71,17 +90,21 @@ class _State extends State<MultiChannel> {
               mimeType: streamManifest.metadata.mimeType.name);
         },
         onPrepared: (controller, info) {
+          print("ready");
           setState(() {
             stateText = "ready";
           });
           controller.play();
         },
         onError: (controller, what, extra, message) {
+          print("error");
           setState(() {
+            showDefaultWebView = true;
             stateText = 'Player Error ($what | $extra | $message)';
           });
         },
         onCompletion: (controller) {
+          print("completed");
           setState(() {
             stateText = 'Completed';
           });
