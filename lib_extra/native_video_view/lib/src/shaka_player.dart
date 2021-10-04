@@ -167,7 +167,7 @@ class ShakaPlayerController {
       "states: $_states, sizes: $_sizes, durations: $_durations";
 
   Future<void> load(
-      {String? manifestUrl, String? licenseUrl, String? mimeType}) {
+      {String? manifestUrl, String? licenseUrl, String? mimeType}) async {
     var json = jsonEncode({
       'command': 'load',
       'params': {
@@ -176,7 +176,9 @@ class ShakaPlayerController {
         'mimeType': mimeType
       }
     });
-    return webViewController.evaluateJavascript('externalCommand($json);');
+    var value =
+        await webViewController.evaluateJavascript('externalCommand($json);');
+    print("$value");
   }
 
   Future<void> volume(double volume) async =>
@@ -267,6 +269,7 @@ class _ShakaPlayerViewState extends State<ShakaPlayerView> {
                     setState(() {});
                   }
                 }
+
               } else if (json['error'] != null) {
                 print("error  ${jsMessage.message}");
                 var error = ShakaPlayerError.fromJson(
@@ -285,7 +288,7 @@ class _ShakaPlayerViewState extends State<ShakaPlayerView> {
       debuggingEnabled: true,
     );
     Widget videoView = child;
-    return Opacity(opacity: _loaded ? 1.0 : 0.0, child: videoView);
+    return Opacity(opacity: _loaded ? 1.0 : 1.0, child: videoView);
   }
 
   // We cannot embed the content as asset because of the SSL errors

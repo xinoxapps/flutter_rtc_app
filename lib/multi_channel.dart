@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:native_video_view/native_video_view.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 import 'kpn.dart';
 
@@ -11,6 +12,8 @@ class MultiChannel extends StatefulWidget {
 }
 
 class _State extends State<MultiChannel> {
+  String stateText = "Loading..";
+  bool showDefaultWebView = false;
   @override
   void initState() {
     super.initState();
@@ -23,59 +26,92 @@ class _State extends State<MultiChannel> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<StreamManifest>(
-        future: KPNStreaming()
-            .fetchManifest(), // a previously-obtained Future<String> or null
-        builder:
-            (BuildContext context, AsyncSnapshot<StreamManifest> manifest) {
-          if (manifest.hasData) {
-            return _renderVideoPlayer(context, manifest.data!);
-          } else if (manifest.hasError) {
-            return Container(
-              child: Text("Error, failed to fetch stream manifest from KPN"),
-            );
-          } else {
-            return Container(
-              child: Text("Loading"),
-            );
-          }
-        });
+    return Column(children: [
+      Row(
+        children: [SizedBox(height: 80, child: Text(stateText))],
+      ),
+      Expanded(
+          child: FutureBuilder<StreamManifest>(
+              future: KPNStreaming()
+                  .fetchManifest(), // a previously-obtained Future<String> or null
+              builder: (BuildContext context,
+                  AsyncSnapshot<StreamManifest> manifest) {
+                if (manifest.hasData) {
+                  return showDefaultWebView
+                      ? _renderWeb()
+                      : _renderVideoPlayer(context, manifest.data!);
+                } else if (manifest.hasError) {
+                  return Container(
+                    child:
+                        Text("Error, failed to fetch stream manifest from KPN"),
+                  );
+                } else {
+                  return Container(
+                    child: Text("Loading"),
+                  );
+                }
+              }))
+    ]);
+  }
+
+  Widget _renderWeb() {
+    return Container(
+        color: Colors.red,
+        alignment: Alignment.center,
+        child: WebView(
+          initialUrl: 'https://shaka-player-demo.appspot.com/demo/',
+        ));
   }
 
   Widget _renderVideoPlayer(
       BuildContext context, StreamManifest streamManifest) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('shaka app'),
-      ),
-      body: Container(
-        alignment: Alignment.center,
-        child: NativeVideoView(
-          keepAspectRatio: true,
-          showMediaController: true,
-          useShakaPlayer: true,
-          useExoPlayer: false,
-          onCreated: (controller) {
-            controller.setVideoSource(streamManifest.metadata.srcURL.toString(),
-                drmCertificateUrl:
-                    streamManifest.metadata.certificateURL?.toString(),
-                drmLicenseUrl:
-                    streamManifest.metadata.licenseAcquisitionURL?.toString(),
-                mimeType: streamManifest.metadata.mimeType.name);
-          },
-          onPrepared: (controller, info) {
-            controller.play();
-          },
-          onError: (controller, what, extra, message) {
-            print('Player Error ($what | $extra | $message)');
-          },
-          onCompletion: (controller) {
-            print('Video completed');
-          },
-          onProgress: (progress, duration) {
-            print('$progress | $duration');
-          },
-        ),
+    return Container(
+      color: Colors.green,
+      alignment: Alignment.center,
+      child: NativeVideoView(
+        keepAspectRatio: true,
+        showMediaController: true,
+        useShakaPlayer: true,
+        useExoPlayer: false,
+        onCreated: (controller) {
+          setState(() {
+            stateText = "created";
+          });
+          /*
+          controller.setVideoSource(
+              'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+              mimeType: 'video/mp4');
+          */
+          controller.setVideoSource(streamManifest.metadata.srcURL.toString(),
+              drmCertificateUrl:
+                  streamManifest.metadata.certificateURL?.toString(),
+              drmLicenseUrl:
+                  streamManifest.metadata.licenseAcquisitionURL?.toString(),
+              mimeType: streamManifest.metadata.mimeType.name);
+        },
+        onPrepared: (controller, info) {
+          print("ready");
+          setState(() {
+            stateText = "ready";
+          });
+          controller.play();
+        },
+        onError: (controller, what, extra, message) {
+          print("error");
+          setState(() {
+            showDefaultWebView = true;
+            stateText = 'Player Error ($what | $extra | $message)';
+          });
+        },
+        onCompletion: (controller) {
+          print("completed");
+          setState(() {
+            stateText = 'Completed';
+          });
+        },
+        onProgress: (progress, duration) {
+          print('$progress | $duration');
+        },
       ),
     );
   }

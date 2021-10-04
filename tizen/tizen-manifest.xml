@@ -10,7 +10,14 @@
         <infolink>T-INFOLINK2021-1000</infolink>
     </tv-info>
     <privileges>
+        <!--To stream media from the network-->
         <privilege>http://tizen.org/privilege/internet</privilege>
+        <!--To play media from internal storage-->
+        <privilege>http://tizen.org/privilege/mediastorage</privilege>
+        <!--To play media from external storage-->
+        <privilege>http://tizen.org/privilege/externalstorage</privilege>
+        <privilege>http://developer.samsung.com/privilege/drmplay</privilege>
     </privileges>
     <feature name="http://tizen.org/feature/screen.size.all"/>
 </manifest>
+
