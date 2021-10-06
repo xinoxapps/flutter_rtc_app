@@ -173,10 +173,10 @@ class _NativeVideoViewState extends State<NativeVideoView> {
               }
             }
           },
-          errorCallback: (controller, error) {
+          errorCallback: (controller, ShakaPlayerError error) {
             if (widget.onError != null) {
-              widget.onError!(
-                  ShakaVideoViewController(controller!), 0, 0, "Video Error");
+              widget.onError!(ShakaVideoViewController(controller!), 0, 0,
+                  "Video Error: '${error.code}'");
             }
           },
           progressCallback:

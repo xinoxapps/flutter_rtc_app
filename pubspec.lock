@@ -212,13 +212,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.0"
-  webview_flutter_tizen:
-    dependency: "direct main"
-    description:
-      name: webview_flutter_tizen
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.3.5"
   webview_flutter_wkwebview:
     dependency: transitive
     description:

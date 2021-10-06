@@ -27,9 +27,7 @@ class _State extends State<MultiChannel> {
   @override
   Widget build(BuildContext context) {
     return Column(children: [
-      Row(
-        children: [SizedBox(height: 80, child: Text(stateText))],
-      ),
+      Text(stateText),
       Expanded(
           child: FutureBuilder<StreamManifest>(
               future: KPNStreaming()
@@ -37,7 +35,7 @@ class _State extends State<MultiChannel> {
               builder: (BuildContext context,
                   AsyncSnapshot<StreamManifest> manifest) {
                 if (manifest.hasData) {
-                  return showDefaultWebView
+                  return this.showDefaultWebView
                       ? _renderWeb()
                       : _renderVideoPlayer(context, manifest.data!);
                 } else if (manifest.hasError) {
@@ -55,11 +53,12 @@ class _State extends State<MultiChannel> {
   }
 
   Widget _renderWeb() {
+    print("render default");
     return Container(
         color: Colors.red,
         alignment: Alignment.center,
         child: WebView(
-          initialUrl: 'https://shaka-player-demo.appspot.com/demo/',
+          initialUrl: 'https://shaka-player-demo.appspot.com/support.html',
         ));
   }
 
@@ -77,17 +76,18 @@ class _State extends State<MultiChannel> {
           setState(() {
             stateText = "created";
           });
-          /*
-          controller.setVideoSource(
-              'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-              mimeType: 'video/mp4');
-          */
+
           controller.setVideoSource(streamManifest.metadata.srcURL.toString(),
               drmCertificateUrl:
                   streamManifest.metadata.certificateURL?.toString(),
               drmLicenseUrl:
                   streamManifest.metadata.licenseAcquisitionURL?.toString(),
               mimeType: streamManifest.metadata.mimeType.name);
+
+          /* controller.setVideoSource(
+              'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+              mimeType: 'video/mp4');
+           */
         },
         onPrepared: (controller, info) {
           print("ready");

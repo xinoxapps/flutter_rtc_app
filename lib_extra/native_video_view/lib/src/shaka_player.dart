@@ -115,7 +115,7 @@ class ShakaPlayerError {
   ShakaPlayerError({this.code});
 
   factory ShakaPlayerError.fromJson(Map<String, dynamic> json) {
-    return ShakaPlayerError(code: json["code"] as String?);
+    return ShakaPlayerError(code: "0002 $json");
   }
 
   @override
@@ -263,13 +263,12 @@ class _ShakaPlayerViewState extends State<ShakaPlayerView> {
                     widget.stateCallback?.call(_shakaPlayerController);
                   } catch (exc) {
                     widget.errorCallback?.call(_shakaPlayerController,
-                        ShakaPlayerError(code: "internal"));
+                        ShakaPlayerError(code: "0001 internal $exc"));
                   }
                   if (mounted) {
                     setState(() {});
                   }
                 }
-
               } else if (json['error'] != null) {
                 print("error  ${jsMessage.message}");
                 var error = ShakaPlayerError.fromJson(
