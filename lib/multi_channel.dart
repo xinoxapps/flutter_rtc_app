@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:native_video_view/native_video_view.dart';
@@ -53,13 +55,31 @@ class _State extends State<MultiChannel> {
   }
 
   Widget _renderWeb() {
-    print("render default");
     return Container(
-        color: Colors.red,
+        color: Colors.lightGreen,
         alignment: Alignment.center,
-        child: WebView(
-          initialUrl: 'https://shaka-player-demo.appspot.com/support.html',
-        ));
+        child: Padding(
+            padding: EdgeInsets.all(10),
+            child: WebView(
+              debuggingEnabled: true,
+              javascriptMode: JavascriptMode.unrestricted,
+              onWebViewCreated: (WebViewController controller) {
+                print("WebView created");
+                const oneSec = Duration(milliseconds: 1000);
+                int counter = 100;
+                Timer.periodic(oneSec, (Timer t) {
+                  controller.scrollBy(0, 100);
+                  --counter;
+                  if (counter == 0) {
+                    t.cancel();
+                  }
+                });
+              },
+              onWebResourceError: (rr) {
+                print("$rr");
+              },
+              initialUrl: 'https://shaka-player-demo.appspot.com/support.html',
+            )));
   }
 
   Widget _renderVideoPlayer(

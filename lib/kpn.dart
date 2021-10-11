@@ -26,7 +26,8 @@ class _KPNStreamingMobile {
   final String HOST =
       'https://varnish-dev.apps.avs-kpn-ztv-dev.interactievetv.nl/101/1.2.0/R/nld/';
 
-  Future<Map<String, int>> fetchChannel(String name) async {
+  Future<Map<String, int>> fetchChannel(String channelName) async {
+    channelName = channelName.toLowerCase();
     var url = HOST +
         "pctv/tenant_sme/TRAY/LIVECHANNELS?orderBy=orderId&sortOrder=asc";
     Map<String, String> headers = {'Content-Type': 'application/json'};
@@ -43,11 +44,15 @@ class _KPNStreamingMobile {
     var containers = jsonBody["resultObj"]["containers"];
 
     containers.forEach((container) {
-      String name = (container['metadata']['channelName'] ?? "") as String;
-      if (name.toLowerCase() == name.toLowerCase()) {
+      String containerName =
+          ((container['metadata']['channelName'] ?? "") as String)
+              .toLowerCase();
+      if (channelName == containerName) {
         resultOfContainers.add(container);
       }
     });
+
+    print(resultOfContainers);
 
     if (resultOfContainers.isEmpty) {
       print("error2");

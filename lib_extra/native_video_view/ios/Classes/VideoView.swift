@@ -324,7 +324,7 @@ class FairPlayAssetResourceLoaderDelegate: NSObject, AVAssetResourceLoaderDelega
         // the server.
         let certificateData2:Data?
         do {
-            certificateData2 = try Data(contentsOf: certificateURL)
+            certificateData2 = try getDataRequest2(url: certificateURL)
         } catch let error {
             print(error)
             print("🔑", #function, "Unable to read certificateData data!")
@@ -332,11 +332,11 @@ class FairPlayAssetResourceLoaderDelegate: NSObject, AVAssetResourceLoaderDelega
             return false
         }
         let certificateData = certificateData2!
-        //
+
         //guard let certificateData = try? Data(contentsOf: certificateURL) else {
         //    print("🔑", #function, "Unable to read certificateData data!")
-         //   loadingRequest.finishLoading(with: NSError(domain: "com.icapps.error", code: -2, userInfo: nil))
-         //   return false
+        //    loadingRequest.finishLoading(with: NSError(domain: "com.icapps.error", code: -2, userInfo: nil))
+        //    return false
         //}
 
         // Request the Server Playback Context.
@@ -372,4 +372,39 @@ class FairPlayAssetResourceLoaderDelegate: NSObject, AVAssetResourceLoaderDelega
         // asdf
         return true
     }
+
+    public func getDataRequest(url: URL) throws -> Data {
+          let certificateData2:Data?
+            do {
+                print("the url string = \(url.absoluteString)")
+                print("👍", #function, "Url: read certificateData data!", url)
+                certificateData2 = try Data(contentsOf: url)
+                print("🔑", #function, "Success: read certificateData data!")
+            } catch let error {
+                print(error)
+                print("🔑", #function, "Failed: Unable to read certificateData data!")
+                throw error;
+            }
+            return certificateData2!;
+        }
+
+    public func getDataRequest2(url: URL) throws -> Data {
+        let certificateData2:Data?
+        
+        let request1: NSURLRequest = NSURLRequest(url: url)
+        let response: AutoreleasingUnsafeMutablePointer<URLResponse?>? = nil
+        
+        do{
+            certificateData2 = try NSURLConnection.sendSynchronousRequest(request1 as URLRequest, returning: response)
+            print("🔑", #function, "Success: read certificateData data!")
+        } catch let error
+        {
+            print(error)
+            print("🔑", #function, "Failed: Unable to read certificateData data!")
+            throw error;
+        }
+        return certificateData2!;
+    }
+
+    
 }
