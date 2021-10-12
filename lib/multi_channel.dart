@@ -90,19 +90,25 @@ class _State extends State<MultiChannel> {
       child: NativeVideoView(
         keepAspectRatio: true,
         showMediaController: true,
-        useShakaPlayer: true,
+        useShakaPlayer: false,
         useExoPlayer: false,
         onCreated: (controller) {
           setState(() {
             stateText = "created";
           });
-
+/*
           controller.setVideoSource(streamManifest.metadata.srcURL.toString(),
               drmCertificateUrl:
                   streamManifest.metadata.certificateURL?.toString(),
               drmLicenseUrl:
                   streamManifest.metadata.licenseAcquisitionURL?.toString(),
               mimeType: streamManifest.metadata.mimeType.name);
+*/
+          controller.setVideoSource(
+            "https://bitmovin-a.akamaihd.net/content/art-of-motion_drm/m3u8s/11331.m3u8",
+            drmCertificateUrl:
+                'https://playready.directtaps.net/pr/svc/rightsmanager.asmx?PlayRight=1&ContentKey=0EAtsIJQPd5pFiRUrV9Layw==',
+          );
 
           /* controller.setVideoSource(
               'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',

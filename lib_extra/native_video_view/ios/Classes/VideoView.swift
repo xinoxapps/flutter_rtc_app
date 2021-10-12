@@ -324,26 +324,25 @@ class FairPlayAssetResourceLoaderDelegate: NSObject, AVAssetResourceLoaderDelega
         // the server.
         let certificateData2:Data?
         do {
-            certificateData2 = try getDataRequest2(url: certificateURL)
+            certificateData2 = try getDataRequest(url: certificateURL)
         } catch let error {
             print(error)
-            print("🔑", #function, "Unable to read certificateData data!")
+            print("🙈", #function, "Unable to read certificateData data!")
             loadingRequest.finishLoading(with: NSError(domain: "com.icapps.error", code: -2, userInfo: nil))
             return false
         }
         let certificateData = certificateData2!
-
-        //guard let certificateData = try? Data(contentsOf: certificateURL) else {
-        //    print("🔑", #function, "Unable to read certificateData data!")
-        //    loadingRequest.finishLoading(with: NSError(domain: "com.icapps.error", code: -2, userInfo: nil))
-        //    return false
-        //}
+        print("🚀", #function, "Success: read certificateData data!")
+        print("🚀", #function, certificateData as NSData)
 
         // Request the Server Playback Context.
         let usedContentId = self.contentId
         guard
             let contentIdData = usedContentId.data(using: String.Encoding.utf8),
-            let spcData = try? loadingRequest.streamingContentKeyRequestData(forApp: certificateData, contentIdentifier: contentIdData, options: nil),
+            let spcData = try? loadingRequest.streamingContentKeyRequestData(
+            forApp: certificateData,
+            contentIdentifier: contentIdData, options: nil),
+
             let dataRequest = loadingRequest.dataRequest else {
                 print("🔑* resourceLoader", #function, "Unable to read the SPC data.")
                 loadingRequest.finishLoading(with: NSError(domain: "com.icapps.error", code: -3, userInfo: nil))
@@ -379,7 +378,7 @@ class FairPlayAssetResourceLoaderDelegate: NSObject, AVAssetResourceLoaderDelega
                 print("the url string = \(url.absoluteString)")
                 print("👍", #function, "Url: read certificateData data!", url)
                 certificateData2 = try Data(contentsOf: url)
-                print("🔑", #function, "Success: read certificateData data!")
+
             } catch let error {
                 print(error)
                 print("🔑", #function, "Failed: Unable to read certificateData data!")
@@ -395,8 +394,10 @@ class FairPlayAssetResourceLoaderDelegate: NSObject, AVAssetResourceLoaderDelega
         let response: AutoreleasingUnsafeMutablePointer<URLResponse?>? = nil
         
         do{
+            print("The the url string = \(url.absoluteString)")
+            print("👍", #function, "Url: read certificateData data!", url)
             certificateData2 = try NSURLConnection.sendSynchronousRequest(request1 as URLRequest, returning: response)
-            print("🔑", #function, "Success: read certificateData data!")
+            print("👍", #function, "Success: read certificateData data!", response)
         } catch let error
         {
             print(error)
